@@ -1,7 +1,7 @@
 [project]
 name = "gesture-recognizer"
 version = "0.1.0"
-description = "Add your description here"
+description = "Gesture recognizer project for the course DL4CV"
 readme = "README.md"
-requires-python = ">=3.11пш"
+requires-python = ">=3.11"
 dependencies = []
