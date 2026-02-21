@@ -7,6 +7,7 @@ requires-python = "==3.11.14"
 dependencies = [
     "comtypes==1.4.15",
     "customtkinter==5.2.2",
+    "dotenv==0.9.9",
     "huggingface-hub==1.4.1",
     "mediapipe==0.10.32",
     "numpy==2.4.2",
@@ -19,5 +20,6 @@ dependencies = [
     "requests==2.32.5",
     "scikit-learn==1.8.0",
     "screen-brightness-control==0.27.0",
-    "tensorflow==2.20.0"
+    "tensorflow==2.20.0",
+    "tqdm==4.67.3",
 ]
