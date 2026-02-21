@@ -3,18 +3,21 @@ name = "gesture-recognizer"
 version = "0.1.0"
 description = "Gesture recognizer project for the course DL4CV"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = "==3.11.14"
 dependencies = [
-    "comtypes>=1.4.15",
-    "customtkinter>=5.2.2",
-    "mediapipe>=0.10.32",
-    "numpy>=2.4.2",
-    "opencv-python>=4.13.0.92",
-    "pillow>=12.1.1",
-    "pyautogui>=0.9.54",
-    "pycaw>=20251023",
-    "pyinstaller>=6.19.0",
-    "scikit-learn>=1.8.0",
-    "screen-brightness-control>=0.27.0",
-    "tensorflow>=2.20.0",
+    "comtypes==1.4.15",
+    "customtkinter==5.2.2",
+    "huggingface-hub==1.4.1",
+    "mediapipe==0.10.32",
+    "numpy==2.4.2",
+    "opencv-python==4.13.0.92",
+    "pandas==3.0.1",
+    "pillow==12.1.1",
+    "pyautogui==0.9.54",
+    "pycaw==20251023",
+    "pyinstaller==6.19.0",
+    "requests==2.32.5",
+    "scikit-learn==1.8.0",
+    "screen-brightness-control==0.27.0",
+    "tensorflow==2.20.0"
 ]
