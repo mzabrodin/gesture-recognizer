@@ -5,6 +5,7 @@ description = "Gesture recognizer project for the course DL4CV"
 readme = "README.md"
 requires-python = "==3.11.14"
 dependencies = [
+    "ai-edge-litert==2.1.2",
     "comtypes==1.4.15",
     "customtkinter==5.2.2",
     "dotenv==0.9.9",
