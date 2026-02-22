@@ -1,12 +1,13 @@
+import json
 import os
-import pandas as pd
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
 import tensorflow as tf
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
-import json
-from datetime import datetime
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -37,20 +38,20 @@ def main():
     df = pd.read_csv(DATA_CSV)  # type: ignore[call-overload]
 
     print("\nClass distribution in the dataset:")
-    print(df['label_name'].value_counts())
+    print(df["label_name"].value_counts())
     print("\n")
 
-    feature_columns = [col for col in df.columns if col.startswith('coord_')]
+    feature_columns = [col for col in df.columns if col.startswith("coord_")]
     X = df[feature_columns].values.astype(np.float32)
-    y = df['label_id'].values
+    y = df["label_id"].values
 
-    labels_df = df[['label_id', 'label_name']].drop_duplicates().sort_values('label_id')
+    labels_df = df[["label_id", "label_name"]].drop_duplicates().sort_values("label_id")
     num_classes = len(labels_df)
 
     os.makedirs(MODEL_DIR, exist_ok=True)
     os.makedirs(LOGS_DIR, exist_ok=True)
 
-    with open(LABELS_TXT, 'w', encoding='utf-8') as f:
+    with open(LABELS_TXT, "w", encoding="utf-8") as f:
         for _, row in labels_df.iterrows():
             f.write(f"{row['label_name']}\n")
 
@@ -58,12 +59,8 @@ def main():
     print(f"Dataset shape: {X.shape}, Classes: {num_classes}")
 
     # Split data: 70% train, 15% validation, 15% test
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.3, random_state=42, stratify=y
-    )
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp
-    )
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
 
     print(f"Training samples: {len(X_train)} | Validation samples: {len(X_val)} | Testing samples: {len(X_test)}")
 
@@ -73,73 +70,66 @@ def main():
     X_val = scaler.transform(X_val)
     X_test = scaler.transform(X_test)
 
-    scaler_params = {
-        'mean': scaler.mean_.tolist(),
-        'scale': scaler.scale_.tolist()
-    }
-    with open(SCALER_FILE, 'w') as f:
+    scaler_params = {"mean": scaler.mean_.tolist(), "scale": scaler.scale_.tolist()}
+    with open(SCALER_FILE, "w") as f:
         json.dump(scaler_params, f)
     print(f"Saved scaler parameters to {SCALER_FILE}")
 
     print("\nBuilding model...")
-    model = tf.keras.Sequential([
-        tf.keras.layers.InputLayer(input_shape=(42,)),
-        tf.keras.layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(32, activation='relu'),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(num_classes, activation='softmax')
-    ])
+    model = tf.keras.Sequential(
+        [
+            tf.keras.layers.InputLayer(input_shape=(42,)),
+            tf.keras.layers.Dense(
+                128,
+                activation="relu",
+                kernel_regularizer=tf.keras.regularizers.l2(0.001),
+            ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(
+                64,
+                activation="relu",
+                kernel_regularizer=tf.keras.regularizers.l2(0.001),
+            ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(32, activation="relu"),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(num_classes, activation="softmax"),
+        ]
+    )
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
     )
 
-    print(f"\nModel Summary:")
+    print("\nModel Summary:")
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            patience=PATIENCE,
-            restore_best_weights=True,
-            verbose=1
-        ),
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=PATIENCE, restore_best_weights=True, verbose=1),
         tf.keras.callbacks.ModelCheckpoint(
             filepath=MODEL_KERAS,
-            monitor='val_loss',
-            mode='min',
+            monitor="val_loss",
+            mode="min",
             save_best_only=True,
-            verbose=1
+            verbose=1,
         ),
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss',
-            factor=0.5,
-            patience=5,
-            min_lr=1e-7,
-            verbose=1
-        ),
-        tf.keras.callbacks.TensorBoard(
-            log_dir=LOGS_DIR,
-            histogram_freq=1,
-            write_graph=True
-        )
+        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=5, min_lr=1e-7, verbose=1),
+        tf.keras.callbacks.TensorBoard(log_dir=LOGS_DIR, histogram_freq=1, write_graph=True),
     ]
 
     print("\nStarting model training...")
     history = model.fit(
-        X_train, y_train,
+        X_train,
+        y_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         validation_data=(X_val, y_val),
         callbacks=callbacks,
-        verbose=1
+        verbose=1,
     )
 
     print("\n" + "=" * 50)
@@ -156,7 +146,7 @@ def main():
     print("\n" + "=" * 50)
     print("CLASSIFICATION REPORT")
     print("=" * 50)
-    label_names = labels_df['label_name'].tolist()
+    label_names = labels_df["label_name"].tolist()
     print(classification_report(y_test, y_pred_classes, target_names=label_names, zero_division=0))
 
     print("\n" + "=" * 50)
@@ -165,14 +155,14 @@ def main():
     cm = confusion_matrix(y_test, y_pred_classes)
     print(cm)
 
-    history_file = os.path.join(LOGS_DIR, 'training_history.json')
+    history_file = os.path.join(LOGS_DIR, "training_history.json")
     history_dict = {
-        'loss': [float(x) for x in history.history['loss']],
-        'accuracy': [float(x) for x in history.history['accuracy']],
-        'val_loss': [float(x) for x in history.history['val_loss']],
-        'val_accuracy': [float(x) for x in history.history['val_accuracy']]
+        "loss": [float(x) for x in history.history["loss"]],
+        "accuracy": [float(x) for x in history.history["accuracy"]],
+        "val_loss": [float(x) for x in history.history["val_loss"]],
+        "val_accuracy": [float(x) for x in history.history["val_accuracy"]],
     }
-    with open(history_file, 'w') as f:
+    with open(history_file, "w") as f:
         json.dump(history_dict, f, indent=2)
     print(f"\nTraining history saved to {history_file}")
 
@@ -184,7 +174,7 @@ def main():
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     tflite_model = converter.convert()
 
-    with open(MODEL_TFLITE, 'wb') as f:
+    with open(MODEL_TFLITE, "wb") as f:
         f.write(tflite_model)
 
     tflite_size = os.path.getsize(MODEL_TFLITE) / 1024
@@ -197,13 +187,13 @@ def main():
     print("\n" + "=" * 50)
     print("TRAINING COMPLETE!")
     print("=" * 50)
-    print(f"\nFiles created:")
+    print("\nFiles created:")
     print(f"  - Model (Keras): {MODEL_KERAS}")
     print(f"  - Model (TFLite): {MODEL_TFLITE}")
     print(f"  - Labels: {LABELS_TXT}")
     print(f"  - Scaler params: {SCALER_FILE}")
     print(f"  - Training logs: {LOGS_DIR}")
-    print(f"\nTo visualize training with TensorBoard, run:")
+    print("\nTo visualize training with TensorBoard, run:")
     print(f"  tensorboard --logdir {LOGS_DIR}")
 
 

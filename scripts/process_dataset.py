@@ -1,9 +1,9 @@
-import os
 import csv
+import os
 from urllib import request
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['GLOG_minloglevel'] = '2'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["GLOG_minloglevel"] = "2"
 
 import cv2
 import mediapipe as mp
@@ -15,9 +15,11 @@ HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '..', 'models'))
-MODEL_PATH = os.path.join(MODEL_DIR, 'hand_landmarker.task')
-MODEL_URL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+MODEL_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "models"))
+MODEL_PATH = os.path.join(MODEL_DIR, "hand_landmarker.task")
+MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+)
 
 DATA_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data", "raw", "train"))
 OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data", "processed"))
@@ -52,23 +54,26 @@ def main():
         base_options=BaseOptions(model_asset_path=MODEL_PATH),
         running_mode=VisionRunningMode.IMAGE,
         num_hands=1,
-        min_hand_detection_confidence=0.5
+        min_hand_detection_confidence=0.5,
     )
 
     total_processed = 0
 
-    with HandLandmarker.create_from_options(options) as landmarker, open(OUTPUT_CSV, mode='w', newline='',
-                                                                         encoding='utf-8') as f:
+    with (
+        HandLandmarker.create_from_options(options) as landmarker,
+        open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8") as f,
+    ):
         writer = csv.writer(f)
-        header = ['label_name', 'label_id'] + [f'coord_{i}' for i in range(42)]
+        header = ["label_name", "label_id"] + [f"coord_{i}" for i in range(42)]
         writer.writerow(header)
 
         for class_id, class_name in enumerate(classes):
             class_dir = os.path.join(DATA_DIR, class_name)
 
             files = [
-                file_name for file_name in sorted(os.listdir(class_dir))
-                if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))
+                file_name
+                for file_name in sorted(os.listdir(class_dir))
+                if file_name.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
             ]
 
             valid_images = 0
@@ -124,7 +129,9 @@ def main():
             total_processed += valid_images
 
             print(
-                f"[{class_name}] Success: {valid_images} | No hands detected: {no_hand_detected} | Read errors: {unreadable_files}\n")
+                f"[{class_name}] Success: {valid_images} | No hands detected: {no_hand_detected}"
+                f" | Read errors: {unreadable_files}\n"
+            )
 
     print(f"Processing complete. Total samples saved: {total_processed}")
 

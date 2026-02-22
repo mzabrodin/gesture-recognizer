@@ -1,24 +1,24 @@
-import os
-import time
 import json
+import os
 import threading
-from typing import Optional, Tuple, List
+import time
+from typing import List, Optional, Tuple
 
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['GLOG_minloglevel'] = '2'
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["GLOG_minloglevel"] = "2"
 
-import numpy as np
 import cv2
 import mediapipe as mp
+import numpy as np
 from ai_edge_litert.interpreter import Interpreter
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(SCRIPT_DIR, 'models')
-MP_MODEL_PATH = os.path.join(MODEL_DIR, 'hand_landmarker.task')
-TFLITE_MODEL_PATH = os.path.join(MODEL_DIR, 'gesture_classifier.tflite')
-LABELS_PATH = os.path.join(MODEL_DIR, 'labels.txt')
-SCALER_PATH = os.path.join(MODEL_DIR, 'scaler_params.json')
+MODEL_DIR = os.path.join(SCRIPT_DIR, "models")
+MP_MODEL_PATH = os.path.join(MODEL_DIR, "hand_landmarker.task")
+TFLITE_MODEL_PATH = os.path.join(MODEL_DIR, "gesture_classifier.tflite")
+LABELS_PATH = os.path.join(MODEL_DIR, "labels.txt")
+SCALER_PATH = os.path.join(MODEL_DIR, "scaler_params.json")
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -33,12 +33,27 @@ SMOOTHED_PROBS = None
 EMA_ALPHA = 0.4
 
 HAND_CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),  # thumb
-    (0, 5), (5, 6), (6, 7), (7, 8),  # index
-    (5, 9), (9, 13), (13, 17), (0, 17),  # palm base
-    (9, 10), (10, 11), (11, 12),  # middle
-    (13, 14), (14, 15), (15, 16),  # ring
-    (17, 18), (18, 19), (19, 20)  # pinky
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),  # thumb
+    (0, 5),
+    (5, 6),
+    (6, 7),
+    (7, 8),  # index
+    (5, 9),
+    (9, 13),
+    (13, 17),
+    (0, 17),  # palm base
+    (9, 10),
+    (10, 11),
+    (11, 12),  # middle
+    (13, 14),
+    (14, 15),
+    (15, 16),  # ring
+    (17, 18),
+    (18, 19),
+    (19, 20),  # pinky
 ]
 
 
@@ -47,13 +62,13 @@ def load_inference_assets() -> Tuple[List[str], np.ndarray, np.ndarray, Interpre
     if not os.path.exists(TFLITE_MODEL_PATH):
         raise FileNotFoundError(f"TFLite model not found: {TFLITE_MODEL_PATH}")
 
-    with open(LABELS_PATH, 'r', encoding='utf-8') as f:
+    with open(LABELS_PATH, "r", encoding="utf-8") as f:
         labels = [line.strip() for line in f.readlines()]
 
-    with open(SCALER_PATH, 'r') as f:
+    with open(SCALER_PATH, "r") as f:
         scaler_data = json.load(f)
-        scaler_mean = np.array(scaler_data['mean'], dtype=np.float32)
-        scaler_scale = np.array(scaler_data['scale'], dtype=np.float32)
+        scaler_mean = np.array(scaler_data["mean"], dtype=np.float32)
+        scaler_scale = np.array(scaler_data["scale"], dtype=np.float32)
 
     interpreter = Interpreter(model_path=TFLITE_MODEL_PATH)
     interpreter.allocate_tensors()
@@ -64,13 +79,13 @@ def load_inference_assets() -> Tuple[List[str], np.ndarray, np.ndarray, Interpre
 
 
 def process_landmarks(
-        landmarks: List,
-        scaler_mean: np.ndarray,
-        scaler_scale: np.ndarray,
-        interpreter: Interpreter,
-        input_details: List,
-        output_details: List,
-        labels: List[str]
+    landmarks: List,
+    scaler_mean: np.ndarray,
+    scaler_scale: np.ndarray,
+    interpreter: Interpreter,
+    input_details: List,
+    output_details: List,
+    labels: List[str],
 ) -> Tuple[str, float]:
     """Process hand landmarks, apply EMA smoothing, and return predicted gesture label with confidence."""
     global SMOOTHED_PROBS
@@ -91,9 +106,9 @@ def process_landmarks(
 
     scaled_features = (features - scaler_mean) / scaler_scale
 
-    interpreter.set_tensor(input_details[0]['index'], scaled_features)
+    interpreter.set_tensor(input_details[0]["index"], scaled_features)
     interpreter.invoke()
-    predictions = interpreter.get_tensor(output_details[0]['index'])[0]
+    predictions = interpreter.get_tensor(output_details[0]["index"])[0]
 
     if SMOOTHED_PROBS is None:
         SMOOTHED_PROBS = predictions
@@ -104,8 +119,9 @@ def process_landmarks(
     return labels[top_index], float(SMOOTHED_PROBS[top_index])
 
 
-def print_result(result: Optional[mp.tasks.vision.HandLandmarkerResult], output_image: mp.Image,
-                 timestamp_ms: int) -> None:
+def print_result(
+    result: Optional[mp.tasks.vision.HandLandmarkerResult], output_image: mp.Image, timestamp_ms: int
+) -> None:
     """Callback invoked by MediaPipe in a background thread with hand landmark detection results."""
     global CURRENT_RESULT
     with state_lock:
@@ -113,11 +129,11 @@ def print_result(result: Optional[mp.tasks.vision.HandLandmarkerResult], output_
 
 
 def draw_overlays(
-        image: np.ndarray,
-        result: Optional[mp.tasks.vision.HandLandmarkerResult],
-        prediction: str,
-        confidence: float,
-        fps: float
+    image: np.ndarray,
+    result: Optional[mp.tasks.vision.HandLandmarkerResult],
+    prediction: str,
+    confidence: float,
+    fps: float,
 ) -> np.ndarray:
     """Draw prediction results and hand landmarks on the image."""
     annotated_image = image.copy()
@@ -167,7 +183,7 @@ def main() -> None:
         running_mode=VisionRunningMode.LIVE_STREAM,
         result_callback=print_result,
         num_hands=1,
-        min_hand_detection_confidence=0.5
+        min_hand_detection_confidence=0.5,
     )
 
     cap = cv2.VideoCapture(0)
@@ -209,7 +225,7 @@ def main() -> None:
                     interpreter,
                     input_details,
                     output_details,
-                    labels
+                    labels,
                 )
             else:
                 prediction = "No Hand Detected"
@@ -222,7 +238,7 @@ def main() -> None:
 
             frame = draw_overlays(frame, local_result, prediction, confidence, fps)
 
-            cv2.imshow('Real-Time Gesture Recognition', frame)
+            cv2.imshow("Real-Time Gesture Recognition", frame)
 
             if cv2.waitKey(5) & 0xFF == 27:  # Press ESC to exit
                 break

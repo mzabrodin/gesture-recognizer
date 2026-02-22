@@ -1,10 +1,11 @@
-import os
 import concurrent.futures
-from huggingface_hub import HfApi, hf_hub_download, RepoFolder, RepoFile
-from tqdm import tqdm
-from dotenv import load_dotenv
+import os
 
-load_dotenv() # To load HF_TOKEN from .env file if it exists
+from dotenv import load_dotenv
+from huggingface_hub import HfApi, RepoFile, RepoFolder, hf_hub_download
+from tqdm import tqdm
+
+load_dotenv()  # To load HF_TOKEN from .env file if it exists
 
 REPO_ID = "neilrigaud/hagrid-subset"
 REPO_TYPE = "dataset"
@@ -18,12 +19,7 @@ TARGET_SPLIT = "train"
 def download_file(args):
     file_path, local_dir = args
     try:
-        hf_hub_download(
-            repo_id=REPO_ID,
-            repo_type=REPO_TYPE,
-            filename=file_path,
-            local_dir=local_dir
-        )
+        hf_hub_download(repo_id=REPO_ID, repo_type=REPO_TYPE, filename=file_path, local_dir=local_dir)
 
         return True
     except Exception as e:
@@ -39,10 +35,7 @@ def main():
 
     try:
         tree = api.list_repo_tree(repo_id=REPO_ID, repo_type=REPO_TYPE, path_in_repo=TARGET_SPLIT, recursive=False)
-        classes = [
-            item for item in tree
-            if isinstance(item, RepoFolder)
-        ]
+        classes = [item for item in tree if isinstance(item, RepoFolder)]
     except Exception as e:
         print(f"Error retrieving repository structure: {e}")
         return
@@ -55,18 +48,16 @@ def main():
 
         try:
             files = api.list_repo_tree(
-                repo_id=REPO_ID,
-                repo_type=REPO_TYPE,
-                path_in_repo=class_folder.path,
-                recursive=False
+                repo_id=REPO_ID, repo_type=REPO_TYPE, path_in_repo=class_folder.path, recursive=False
             )
         except Exception as e:
             print(f"Error accessing class {class_name}: {e}")
             continue
 
         image_files = [
-            f.path for f in files
-            if isinstance(f, RepoFile) and f.path.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
+            f.path
+            for f in files
+            if isinstance(f, RepoFile) and f.path.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
         ]
 
         files_to_download = image_files[:LIMIT_PER_CLASS]
