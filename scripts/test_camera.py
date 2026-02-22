@@ -12,19 +12,36 @@ HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(SCRIPT_DIR, '..', 'models')
-MODEL_PATH = os.path.join(MODEL_DIR, 'hand_landmarker.task')
-MODEL_URL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+MODEL_DIR = os.path.join(SCRIPT_DIR, "..", "models")
+MODEL_PATH = os.path.join(MODEL_DIR, "hand_landmarker.task")
+MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+)
 
 CURRENT_RESULT = None
 
 HAND_CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),  # thumb
-    (0, 5), (5, 6), (6, 7), (7, 8),  # index
-    (5, 9), (9, 13), (13, 17), (0, 17),  # wrist
-    (9, 10), (10, 11), (11, 12),  # middle
-    (13, 14), (14, 15), (15, 16),  # ring
-    (17, 18), (18, 19), (19, 20)  # pinky
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 4),  # thumb
+    (0, 5),
+    (5, 6),
+    (6, 7),
+    (7, 8),  # index
+    (5, 9),
+    (9, 13),
+    (13, 17),
+    (0, 17),  # wrist
+    (9, 10),
+    (10, 11),
+    (11, 12),  # middle
+    (13, 14),
+    (14, 15),
+    (15, 16),  # ring
+    (17, 18),
+    (18, 19),
+    (19, 20),  # pinky
 ]
 
 
@@ -86,7 +103,7 @@ def main():
         running_mode=VisionRunningMode.LIVE_STREAM,
         result_callback=print_result,
         num_hands=2,
-        min_hand_detection_confidence=0.5
+        min_hand_detection_confidence=0.5,
     )
 
     cap = cv2.VideoCapture(0)
@@ -95,12 +112,12 @@ def main():
         return
 
     with HandLandmarker.create_from_options(options) as landmarker:
-
         start_time = time.time()
 
         while cap.isOpened():
             ret, frame = cap.read()
-            if not ret: break
+            if not ret:
+                break
 
             frame = cv2.flip(frame, 1)
 
@@ -112,7 +129,7 @@ def main():
             if CURRENT_RESULT:
                 frame = draw_landmarks(frame, CURRENT_RESULT)
 
-            cv2.imshow('hand_landmarker_test', frame)
+            cv2.imshow("hand_landmarker_test", frame)
 
             if cv2.waitKey(5) & 0xFF == 27:  # ESC key to exit
                 break
