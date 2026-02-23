@@ -1,7 +1,10 @@
 import json
 import os
+import subprocess
+import sys
 import threading
 import time
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -12,6 +15,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from ai_edge_litert.interpreter import Interpreter
+
+from gesture_actions import GestureActionHandler
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(SCRIPT_DIR, "models")
@@ -173,10 +178,51 @@ def draw_overlays(
     return annotated_image
 
 
+def take_screenshot() -> None:
+    """Save a screenshot to the project directory with a timestamp."""
+    print("Taking screenshot...")
+    screenshots_dir = os.path.join(SCRIPT_DIR, "screenshots")
+    os.makedirs(screenshots_dir, exist_ok=True)
+    name = datetime.now().strftime("screenshot_%Y%m%d_%H%M%S.png")
+    path = os.path.join(screenshots_dir, name)
+
+    if sys.platform == "darwin":
+        try:
+            subprocess.run(
+                ["screencapture", "-x", path],
+                check=True,
+                capture_output=True,
+                timeout=10,
+            )
+            print(f"Screenshot saved: {path}")
+        except subprocess.CalledProcessError as e:
+            print(f"Screenshot failed (screencapture): {e.stderr.decode() if e.stderr else e}")
+        except FileNotFoundError:
+            print("Screenshot failed: screencapture not found")
+        except Exception as e:
+            print(f"Screenshot failed: {e}")
+    else:
+        try:
+            import pyautogui
+            pyautogui.screenshot(path)
+            print(f"Screenshot saved: {path}")
+        except Exception as e:
+            print(f"Screenshot failed: {e}")
+
+
 def main() -> None:
     """Run real-time gesture recognition using webcam input."""
     print("Loading AI models and assets")
     labels, scaler_mean, scaler_scale, interpreter, input_details, output_details = load_inference_assets()
+
+    action_handler = GestureActionHandler(
+        confidence_threshold=0.65,
+        hold_frames=10,
+        cooldown_seconds=1.5,
+    )
+    action_handler.register("peace", lambda: print("Action: peace"))
+    action_handler.register("fist", lambda: print("Action: fist"))
+    action_handler.register("middle_finger", take_screenshot)
 
     options = HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MP_MODEL_PATH),
@@ -230,6 +276,8 @@ def main() -> None:
             else:
                 prediction = "No Hand Detected"
                 confidence = 0.0
+
+            action_handler.on_frame(prediction, confidence)
 
             curr_time = time.time()
             time_diff = curr_time - prev_time
