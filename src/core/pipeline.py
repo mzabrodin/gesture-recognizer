@@ -10,6 +10,7 @@ import mediapipe as mp
 import numpy as np
 from PySide6.QtCore import QObject, Signal
 
+from src.actions.commands import noop_action, screenshot_fullscreen
 from src.actions.handler import GestureActionHandler
 from src.config import THRESHOLDS
 from src.core.camera import open_camera
@@ -85,8 +86,6 @@ class PipelineWorker(QObject):
             self._action_handler.confidence_threshold = max(0.0, min(1.0, value))
 
     def start(self) -> None:
-        from actions.commands import noop_action, screenshot_fullscreen
-
         try:
             self._assets = load_inference_assets()
             self._classifier = GestureClassifier(self._assets)
