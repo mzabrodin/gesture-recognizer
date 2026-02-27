@@ -25,10 +25,15 @@ dependencies = [
     "screen-brightness-control==0.27.0",
     "tensorflow==2.20.0",
     "tqdm==4.67.3",
+    "PySide6==6.8.1",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
-exclude = ["data*", "models*", "scripts*", "logs*"]
+where = ["src"]
+exclude = ["data*", "models*", "scripts*", "logs*", "tests*"]
 
 [tool.ruff]
 line-length = 120

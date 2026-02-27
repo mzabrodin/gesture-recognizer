@@ -1,24 +1,17 @@
-"""
-Gesture-to-action mapping and trigger logic (hold + cooldown).
-Use this module to register callbacks for gestures and call on_frame() from the main loop.
-"""
+from __future__ import annotations
+
 import time
 from collections.abc import Callable
 
 
 class GestureActionHandler:
-    """
-    Tracks gesture predictions and runs registered actions when a gesture
-    is held for enough frames and cooldown has passed.
-    """
-
     def __init__(
         self,
         *,
         confidence_threshold: float = 0.65,
         hold_frames: int = 10,
         cooldown_seconds: float = 1.5,
-    ):
+    ) -> None:
         self.confidence_threshold = confidence_threshold
         self.hold_frames = hold_frames
         self.cooldown_seconds = cooldown_seconds
@@ -28,14 +21,9 @@ class GestureActionHandler:
         self._last_trigger_time: float = 0.0
 
     def register(self, gesture: str, callback: Callable[[], None]) -> None:
-        """Register an action to run when the gesture is triggered."""
         self._registry[gesture] = callback
 
     def on_frame(self, prediction: str, confidence: float) -> None:
-        """
-        Call every frame with current prediction and confidence.
-        Runs the registered action when the gesture is held long enough and cooldown allows.
-        """
         skip_conditions = (
             prediction in ("No Hand Detected", "Waiting", "no_gesture")
             or confidence < self.confidence_threshold
@@ -63,5 +51,6 @@ class GestureActionHandler:
         self._hold_count = 0
         try:
             self._registry[prediction]()
-        except Exception as e:
-            print(f"Gesture action error ({prediction}): {e}")
+        except Exception as exc:  # pragma: no cover - best-effort logging
+            print(f"Gesture action error ({prediction}): {exc}")
+
