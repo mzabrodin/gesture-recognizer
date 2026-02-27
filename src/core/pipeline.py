@@ -3,19 +3,19 @@ from __future__ import annotations
 import threading
 import time
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
 import cv2
 import mediapipe as mp
 import numpy as np
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Signal
 
 from actions.handler import GestureActionHandler
 from config import THRESHOLDS
+
 from .camera import open_camera
 from .classifier import GestureClassifier, InferenceAssets, load_inference_assets
 from .detector import HandDetector, HandLandmarkerResult
-
 
 HAND_CONNECTIONS = [
     (0, 1),

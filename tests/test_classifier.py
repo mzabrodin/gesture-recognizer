@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -15,7 +14,7 @@ import sys
 
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
-from config import PATHS  # noqa: E402
+from config import PATHS
 from core.classifier import GestureClassifier, InferenceAssets, load_inference_assets  # noqa: E402
 
 
@@ -27,7 +26,6 @@ def test_classifier_predicts_label():
     assets: InferenceAssets = load_inference_assets()
     classifier = GestureClassifier(assets)
 
-    # Fake 21 landmarks with x,y in [0,1]
     class DummyLm:
         def __init__(self, x: float, y: float) -> None:
             self.x = x

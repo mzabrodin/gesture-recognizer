@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import runpy
 import sys
+from pathlib import Path
 
 
 def main() -> None:

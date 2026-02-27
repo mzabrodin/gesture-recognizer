@@ -7,7 +7,6 @@ import mediapipe as mp
 
 from config import PATHS, THRESHOLDS
 
-
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions

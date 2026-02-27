@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from typing import Optional
 
 import cv2
 import numpy as np
-from PySide6.QtCore import Qt, QThread, Slot, QTimer
+from PySide6.QtCore import Qt, QThread, QTimer, Slot
 from PySide6.QtGui import QFont, QImage, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -246,7 +245,6 @@ class MainWindow(QMainWindow):
         self._prediction_label.setText(f"Prediction: {prediction}")
         self._confidence_label.setText(f"Confidence: {confidence * 100:.1f}%")
         self._fps_label.setText(f"FPS: {fps:.1f}")
-        # Підсвітка FPS: зелений > 20, жовтий 10–20, червоний < 10
         if fps >= 20:
             fps_color = "#4ade80"
         elif fps >= 10:
@@ -261,7 +259,7 @@ class MainWindow(QMainWindow):
     def on_error(self, message: str) -> None:
         self._status.showMessage(f"Error: {message}")
 
-    def closeEvent(self, event) -> None:  # type: ignore[override]
+    def closeEvent(self, event) -> None:
         if self._quit_requested or not self._minimize_to_tray_checkbox.isChecked():
             self._worker.stop()
             self._thread.quit()
