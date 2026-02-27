@@ -5,8 +5,7 @@ from typing import Optional
 
 import mediapipe as mp
 
-from config import PATHS, THRESHOLDS
-
+from src.config import PATHS, THRESHOLDS
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -47,4 +46,3 @@ class HandDetector:
     @property
     def landmarker(self) -> HandLandmarker:
         return self._landmarker
-

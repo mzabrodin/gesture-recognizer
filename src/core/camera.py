@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import cv2
 
-from config import VIDEO
+from src.config import VIDEO
 
 
 def open_camera() -> cv2.VideoCapture:
@@ -17,4 +17,3 @@ def open_camera() -> cv2.VideoCapture:
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, VIDEO.width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, VIDEO.height)
     return cap
-

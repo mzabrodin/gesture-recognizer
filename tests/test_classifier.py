@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
-import numpy as np
 import pytest
+
+from src.config import PATHS
+from src.core.classifier import GestureClassifier, InferenceAssets, load_inference_assets
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 os.environ.setdefault("GLOG_minloglevel", "2")
 
-import sys
 
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
-from config import PATHS  # noqa: E402
-from core.classifier import GestureClassifier, InferenceAssets, load_inference_assets  # noqa: E402
 
 
 @pytest.mark.skipif(
@@ -40,4 +40,3 @@ def test_classifier_predicts_label():
     assert isinstance(label, str)
     assert isinstance(conf, float)
     assert 0.0 <= conf <= 1.0
-

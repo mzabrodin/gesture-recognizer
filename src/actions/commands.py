@@ -3,11 +3,11 @@ from __future__ import annotations
 import subprocess
 import sys
 from datetime import datetime
-from pathlib import Path
 
 import pyautogui
 
-from config import SCREENSHOTS
+from src.actions.handler import GestureActionHandler
+from src.config import SCREENSHOTS
 
 
 def screenshot_fullscreen() -> None:
@@ -37,9 +37,8 @@ def noop_action(name: str) -> None:
     print(f"Gesture recognized: {name}")
 
 
-def register_default_actions(handler: "GestureActionHandler") -> None:  # type: ignore[name-defined]
+def register_default_actions(handler: GestureActionHandler) -> None:
     """Register default gesture → command mapping on the provided handler."""
     handler.register("peace", lambda: noop_action("peace"))
     handler.register("fist", lambda: noop_action("fist"))
     handler.register("middle_finger", screenshot_fullscreen)
-

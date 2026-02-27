@@ -7,7 +7,7 @@ from typing import List, Tuple
 import numpy as np
 from ai_edge_litert.interpreter import Interpreter
 
-from config import PATHS, THRESHOLDS
+from src.config import PATHS, THRESHOLDS
 
 
 @dataclass
@@ -79,4 +79,3 @@ class GestureClassifier:
 
         top_index = int(np.argmax(self._smoothed_probs))
         return self.assets.labels[top_index], float(self._smoothed_probs[top_index])
-

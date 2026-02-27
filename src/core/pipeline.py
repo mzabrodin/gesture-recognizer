@@ -3,19 +3,18 @@ from __future__ import annotations
 import threading
 import time
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
 import cv2
 import mediapipe as mp
 import numpy as np
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Signal
 
-from actions.handler import GestureActionHandler
-from config import THRESHOLDS
-from .camera import open_camera
-from .classifier import GestureClassifier, InferenceAssets, load_inference_assets
-from .detector import HandDetector, HandLandmarkerResult
-
+from src.actions.handler import GestureActionHandler
+from src.config import THRESHOLDS
+from src.core.camera import open_camera
+from src.core.classifier import GestureClassifier, InferenceAssets, load_inference_assets
+from src.core.detector import HandDetector, HandLandmarkerResult
 
 HAND_CONNECTIONS = [
     (0, 1),
@@ -96,12 +95,15 @@ class PipelineWorker(QObject):
                 hold_frames=10,
                 cooldown_seconds=1.5,
             )
+
             # Wrap actions so we can emit action_triggered for toasts
             def wrap(gesture: str, callback):
                 def w():
                     callback()
                     self.action_triggered.emit(gesture)
+
                 return w
+
             self._action_handler.register("peace", wrap("peace", lambda: noop_action("peace")))
             self._action_handler.register("fist", wrap("fist", lambda: noop_action("fist")))
             self._action_handler.register("middle_finger", wrap("middle_finger", screenshot_fullscreen))
@@ -159,4 +161,3 @@ class PipelineWorker(QObject):
 
     def stop(self) -> None:
         self._stop_flag.set()
-

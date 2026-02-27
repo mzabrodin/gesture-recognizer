@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from pathlib import Path
 from urllib import request
@@ -6,12 +7,11 @@ from urllib import request
 import cv2
 import mediapipe as mp
 
-import sys
+from src.config import PATHS
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
-from config import PATHS
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker

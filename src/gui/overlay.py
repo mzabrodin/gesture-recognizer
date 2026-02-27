@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 
 from config import COLORS
-from core.pipeline import HAND_CONNECTIONS
 from core.detector import HandLandmarkerResult
+from core.pipeline import HAND_CONNECTIONS
 
 
 def draw_overlays(

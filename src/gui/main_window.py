@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from typing import Optional
 
 import cv2
 import numpy as np
-from PySide6.QtCore import Qt, QThread, Slot, QTimer
+from PySide6.QtCore import Qt, QThread, QTimer, Slot
 from PySide6.QtGui import QFont, QImage, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,

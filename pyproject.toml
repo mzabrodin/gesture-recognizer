@@ -26,6 +26,7 @@ dependencies = [
     "tensorflow==2.20.0",
     "tqdm==4.67.3",
     "PySide6==6.8.1",
+    "pytest==9.0.2",
 ]
 
 [tool.setuptools]

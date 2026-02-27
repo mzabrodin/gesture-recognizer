@@ -8,14 +8,15 @@ os.environ["GLOG_minloglevel"] = "2"
 
 import sys
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT_DIR / "src"))
-
 import cv2
 import mediapipe as mp
 from tqdm import tqdm
 
-from config import DATA, PATHS
+from src.config import DATA, PATHS
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker

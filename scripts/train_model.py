@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -10,15 +11,15 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from src.config import DATA, LOGS, PATHS
+
 np.random.seed(42)
 tf.random.set_seed(42)
 
-import sys
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
-from config import DATA, LOGS, PATHS
 
 DATA_CSV = DATA.processed_landmarks
 MODEL_DIR = PATHS.models_dir
