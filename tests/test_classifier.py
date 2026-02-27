@@ -27,7 +27,6 @@ def test_classifier_predicts_label():
     assets: InferenceAssets = load_inference_assets()
     classifier = GestureClassifier(assets)
 
-    # Fake 21 landmarks with x,y in [0,1]
     class DummyLm:
         def __init__(self, x: float, y: float) -> None:
             self.x = x
