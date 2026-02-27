@@ -22,9 +22,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import SCREENSHOTS, THRESHOLDS
-from core.pipeline import PipelineWorker
-from gui.overlay import draw_overlays
+from src.config import SCREENSHOTS, THRESHOLDS
+from src.core.pipeline import PipelineWorker
+from src.gui.overlay import draw_overlays
 
 
 class MainWindow(QMainWindow):
@@ -99,9 +99,7 @@ class MainWindow(QMainWindow):
 
         self._actions_checkbox = QCheckBox("Enable OS actions (screenshots, etc.)")
         self._actions_checkbox.setChecked(True)
-        self._actions_checkbox.stateChanged.connect(
-            lambda state: self._worker.set_actions_enabled(bool(state))
-        )
+        self._actions_checkbox.stateChanged.connect(lambda state: self._worker.set_actions_enabled(bool(state)))
         actions_layout.addWidget(self._actions_checkbox)
 
         # Confidence threshold slider (50–95%)
@@ -130,11 +128,7 @@ class MainWindow(QMainWindow):
         # Gesture legend — що який жест робить
         legend_group = QGroupBox("Gesture shortcuts")
         legend_layout = QVBoxLayout(legend_group)
-        legend_text = QLabel(
-            "peace → (no action)\n"
-            "fist → (no action)\n"
-            "middle_finger → Screenshot"
-        )
+        legend_text = QLabel("peace → (no action)\nfist → (no action)\nmiddle_finger → Screenshot")
         legend_text.setStyleSheet("color: #aaaaaa; font-size: 12px;")
         legend_text.setWordWrap(True)
         legend_layout.addWidget(legend_text)
@@ -269,4 +263,3 @@ class MainWindow(QMainWindow):
         else:
             self.hide()
             event.ignore()
-

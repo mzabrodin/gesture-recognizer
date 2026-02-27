@@ -5,9 +5,9 @@ from typing import Optional
 import cv2
 import numpy as np
 
-from config import COLORS
-from core.detector import HandLandmarkerResult
-from core.pipeline import HAND_CONNECTIONS
+from src.config import COLORS
+from src.core.detector import HandLandmarkerResult
+from src.core.pipeline import HAND_CONNECTIONS
 
 
 def draw_overlays(
@@ -70,4 +70,3 @@ def draw_overlays(
                 cv2.circle(annotated_image, point, 5, COLORS.joint, -1)
 
     return annotated_image
-
