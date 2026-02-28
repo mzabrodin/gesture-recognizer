@@ -1,9 +1,17 @@
 import os
+import sys
 import time
+from pathlib import Path
 from urllib import request
 
 import cv2
 import mediapipe as mp
+
+from src.config import PATHS
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -11,9 +19,8 @@ HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(SCRIPT_DIR, "..", "models")
-MODEL_PATH = os.path.join(MODEL_DIR, "hand_landmarker.task")
+MODEL_DIR = PATHS.models_dir
+MODEL_PATH = PATHS.hand_landmarker
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
 )
@@ -51,7 +58,7 @@ def ensure_model_exists():
 
     if not os.path.exists(MODEL_PATH):
         try:
-            request.urlretrieve(MODEL_URL, MODEL_PATH)
+            request.urlretrieve(MODEL_URL, str(MODEL_PATH))
         except Exception as e:
             print(f"Error downloading model: {e}")
             raise

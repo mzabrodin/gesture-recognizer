@@ -1,6 +1,8 @@
 import json
 import os
+import sys
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -9,19 +11,25 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from src.config import DATA, LOGS, PATHS
+
 np.random.seed(42)
 tf.random.set_seed(42)
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_CSV = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data", "processed", "landmarks.csv"))
-MODEL_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "models"))
-MODEL_KERAS = os.path.join(MODEL_DIR, "gesture_classifier.keras")
-MODEL_TFLITE = os.path.join(MODEL_DIR, "gesture_classifier.tflite")
-LABELS_TXT = os.path.join(MODEL_DIR, "labels.txt")
-SCALER_FILE = os.path.join(MODEL_DIR, "scaler_params.json")
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
+
+DATA_CSV = DATA.processed_landmarks
+MODEL_DIR = PATHS.models_dir
+MODEL_KERAS = MODEL_DIR / "gesture_classifier.keras"
+MODEL_TFLITE = PATHS.gesture_classifier
+LABELS_TXT = PATHS.labels
+SCALER_FILE = PATHS.scaler_params
 
 run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-LOGS_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "logs", run_id))
+LOGS_DIR = LOGS.base_dir / run_id
 
 EPOCHS = 100
 BATCH_SIZE = 32
@@ -111,7 +119,7 @@ def main():
     callbacks = [
         tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=PATIENCE, restore_best_weights=True, verbose=1),
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=MODEL_KERAS,
+            filepath=str(MODEL_KERAS),
             monitor="val_loss",
             mode="min",
             save_best_only=True,
@@ -155,7 +163,7 @@ def main():
     cm = confusion_matrix(y_test, y_pred_classes)
     print(cm)
 
-    history_file = os.path.join(LOGS_DIR, "training_history.json")
+    history_file = LOGS_DIR / "training_history.json"
     history_dict = {
         "loss": [float(x) for x in history.history["loss"]],
         "accuracy": [float(x) for x in history.history["accuracy"]],
