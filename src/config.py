@@ -5,12 +5,14 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from platformdirs import user_pictures_dir
+
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 @dataclass(frozen=True)
 class ModelPaths:
-    """Paths to model artefacts resolved relative to the project root."""
+    """Paths to model artifacts resolved relative to the project root."""
 
     root: str = os.path.join(_PROJECT_ROOT, "models")
     hand_landmarker: str = os.path.join(root, "hand_landmarker.task")
@@ -74,7 +76,7 @@ HAND_CONNECTIONS: tuple[tuple[int, int], ...] = (
 
 IGNORE_GESTURES: frozenset[str] = frozenset({"no_gesture", "No Hand Detected", "Waiting"})
 
-SCREENSHOTS_DIR: str = os.path.join(_PROJECT_ROOT, "screenshots")
+SCREENSHOTS_DIR: str = os.path.join(user_pictures_dir(), "GestureRecognizer")
 
 MODEL_PATHS = ModelPaths()
 INFERENCE_DEFAULTS = InferenceDefaults()
