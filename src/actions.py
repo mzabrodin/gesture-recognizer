@@ -22,7 +22,6 @@ def _osascript(script: str) -> None:
         log.exception("osascript failed: %s", script)
 
 
-
 def volume_up() -> None:
     """Increase system volume by ~10 %."""
     if sys.platform == "darwin":
@@ -47,41 +46,74 @@ def volume_down() -> None:
 
 def toggle_mute() -> None:
     """Toggle system mute state."""
-    _osascript("set volume output muted (not (output muted of (get volume settings)))")
+    if sys.platform == "darwin":
+        _osascript("set volume output muted (not (output muted of (get volume settings)))")
+    else:
+        import pyautogui
+
+        pyautogui.press("volumemute")
     log.info("Mute toggled")
 
 
 def play_pause() -> None:
     """Send media play/pause key event."""
-    _osascript('tell application "System Events" to key code 49 using {command down}')
+    if sys.platform == "darwin":
+        _osascript('tell application "System Events" to key code 49 using {command down}')
+    else:
+        import pyautogui
+
+        pyautogui.press("playpause")
     log.info("Play/Pause")
 
 
-
 def take_screenshot() -> None:
-    """Save a screenshot via macOS screencapture."""
+    """Save a screenshot (cross-platform)."""
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     name = datetime.now().strftime("screenshot_%Y%m%d_%H%M%S.png")
     path = os.path.join(SCREENSHOTS_DIR, name)
     try:
-        subprocess.run(["screencapture", "-x", path], check=True, capture_output=True, timeout=10)
+        if sys.platform == "darwin":
+            subprocess.run(["screencapture", "-x", path], check=True, capture_output=True, timeout=10)
+        else:
+            import pyautogui
+
+            screenshot = pyautogui.screenshot()
+            screenshot.save(path)
         log.info("Screenshot saved: %s", path)
     except Exception:
         log.exception("Screenshot failed")
 
 
-
 def brightness_up() -> None:
-    """Simulate brightness-up key press."""
-    _osascript('tell application "System Events" to key code 144')
-    log.info("Brightness up")
+    """Increase screen brightness by ~10%."""
+    if sys.platform == "darwin":
+        _osascript('tell application "System Events" to key code 144')
+        log.info("Brightness up (macOS)")
+    else:
+        try:
+            import screen_brightness_control as sbc
+
+            current = sbc.get_brightness()[0]
+            sbc.set_brightness(min(100, current + 10))
+            log.info("Brightness up (Windows/Linux)")
+        except Exception:
+            log.exception("Failed to increase brightness")
 
 
 def brightness_down() -> None:
-    """Simulate brightness-down key press."""
-    _osascript('tell application "System Events" to key code 145')
-    log.info("Brightness down")
+    """Decrease screen brightness by ~10%."""
+    if sys.platform == "darwin":
+        _osascript('tell application "System Events" to key code 145')
+        log.info("Brightness down (macOS)")
+    else:
+        try:
+            import screen_brightness_control as sbc
 
+            current = sbc.get_brightness()[0]
+            sbc.set_brightness(max(0, current - 10))
+            log.info("Brightness down (Windows/Linux)")
+        except Exception:
+            log.exception("Failed to decrease brightness")
 
 
 def build_default_actions() -> list[GestureAction]:
