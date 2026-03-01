@@ -1,29 +1,37 @@
 import csv
 import os
+from pathlib import Path
 from urllib import request
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["GLOG_minloglevel"] = "2"
 
+import sys
+
 import cv2
 import mediapipe as mp
 from tqdm import tqdm
+
+from src.config import DATA, PATHS
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "models"))
-MODEL_PATH = os.path.join(MODEL_DIR, "hand_landmarker.task")
+MODEL_DIR = PATHS.models_dir
+MODEL_PATH = PATHS.hand_landmarker
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
 )
 
-DATA_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data", "raw", "train"))
-OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data", "processed"))
-OUTPUT_CSV = os.path.join(OUTPUT_DIR, "landmarks.csv")
+DATA_DIR = DATA.raw_train
+OUTPUT_DIR = DATA.processed_dir
+OUTPUT_CSV = DATA.processed_landmarks
 
 
 def ensure_model_exists():
@@ -32,7 +40,7 @@ def ensure_model_exists():
 
     if not os.path.exists(MODEL_PATH):
         try:
-            request.urlretrieve(MODEL_URL, MODEL_PATH)
+            request.urlretrieve(MODEL_URL, str(MODEL_PATH))
         except Exception as e:
             print(f"Error downloading model: {e}")
             raise
@@ -51,7 +59,7 @@ def main():
     classes = sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
 
     options = HandLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=MODEL_PATH),
+        base_options=BaseOptions(model_asset_path=str(MODEL_PATH)),
         running_mode=VisionRunningMode.IMAGE,
         num_hands=1,
         min_hand_detection_confidence=0.5,

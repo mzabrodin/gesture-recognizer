@@ -1,16 +1,23 @@
 import concurrent.futures
 import os
+import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, RepoFile, RepoFolder, hf_hub_download
 from tqdm import tqdm
 
+from src.config import DATA
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "src"))
+
+
 load_dotenv()  # To load HF_TOKEN from .env file if it exists
 
 REPO_ID = "neilrigaud/hagrid-subset"
 REPO_TYPE = "dataset"
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.normpath(os.path.join(BASE_DIR, "data", "raw"))
+OUTPUT_DIR = DATA.raw_dir
 LIMIT_PER_CLASS = 2500
 MAX_WORKERS = 8
 TARGET_SPLIT = "train"

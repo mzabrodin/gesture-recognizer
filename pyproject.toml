@@ -29,6 +29,9 @@ dev = [
     "pyinstaller==6.19.0",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
