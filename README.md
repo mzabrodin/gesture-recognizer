@@ -1,82 +1,82 @@
 # Gesture Recognizer
 
-A real-time hand gesture recognition system using MediaPipe for landmark extraction and a TensorFlow-based classifier.
-This project was developed as part of the DL4CV course.
-
-> **Status:** Work in Progress. Current version focuses on dataset processing, landmark extraction, and model training.
-> Real-time inference is functional but undergoing refinement.
+A real-time hand gesture recognition system using MediaPipe for landmark extraction and a TensorFlow-Lite-based
+classifier.
+This project features a complete pipeline for dataset acquisition, landmark processing, model training, and a
+PySide6-based desktop application for real-time inference and action triggering.
 
 ## General Overview
 
-The Gesture Recognizer is designed to identify specific hand gestures from a webcam stream to trigger system-level
-actions. For example, specific gestures can be used for:
+The Gesture Recognizer identifies hand gestures from a webcam stream to trigger system-level actions via `pyautogui`.
+Key features include:
 
-- **Taking a screenshot**
-- **Adjusting volume**
-- **Other custom shortcuts**
+- **Action Triggering:** Map gestures to actions like taking screenshots, adjusting volume, or media control.
+- **Real-Time Feedback:** GUI showing camera feed, detected landmarks, and classification results.
+- **Customizable:** Settings for confidence thresholds, active gestures, and camera selection.
 
 The system utilizes a multi-stage approach:
 
-1. **Hand Detection & Landmark Extraction:** Using MediaPipe's Hand Landmarker to identify 21 3D hand landmarks.
-2. **Preprocessing:** Normalizing and scaling landmark coordinates to be scale and position invariant.
+1. **Hand Detection & Landmark Extraction:** Using MediaPipe's Hand Landmarker to identify 21 3D hand
+   landmarks (normalized X, Y, and Z coordinates).
+2. **Preprocessing:** Normalizing and scaling landmarks to be scale and position invariant (relative to wrist).
+   Currently, the classifier utilizes the 2D (X, Y) projection of these landmarks.
 3. **Classification:** A deep neural network (TFLite) classifies the processed landmarks into gesture categories.
 
-## Technical Stack & Libraries
+## Technical Stack
 
 ### Core Technologies
 
 - **Language:** Python 3.11.14
 - **Package Manager:** [uv](https://github.com/astral-sh/uv) (for fast, reproducible dependency management)
+- **GUI Framework:** PySide6 (Qt for Python)
+- **Inference:** AI Edge LiteRT (TensorFlow Lite)
 
-### Libraries
+### Key Libraries
 
-- **Computer Vision:** `mediapipe` (landmark extraction), `opencv-python` (image processing and camera interface)
-- **Machine Learning:** `tensorflow` (model training and TFLite conversion), `scikit-learn` (data scaling and
-  evaluation)
-- **Data Handling:** `pandas`, `numpy`, `tqdm`
-- **Utilities:** `huggingface-hub` (dataset acquisition), `python-dotenv`
+- **Computer Vision:** `mediapipe` (landmark extraction), `opencv-python` (camera interface)
+- **Machine Learning:** `tensorflow` (training), `scikit-learn` (scaling)
+- **Automation:** `pyautogui` (system actions), `screen-brightness-control`
+- **Utilities:** `huggingface-hub`, `python-dotenv`, `platformdirs`
 
-## Creating a Model
+## Project Structure
 
-The process of building the gesture recognition model follows a strictly defined pipeline:
-
-### Data Acquisition
-
-The project uses a subset of the **HaGrid (Hand Gesture Recognition Dataset)**.
-
-- **Script:** `scripts/download_dataset.py`
-- **Action:** Downloads training images from Hugging Face based on specific class labels.
-- **Classes:** `call`, `dislike`, `fist`, `four`, `grabbing`, `grip`, `like`, `middle_finger`, `mute`, `no_gesture`, `ok`, `one`, `palm`, `peace`, `peace_inverted`, `rock`, `stop`, `stop_inverted`, `three`, `three2`, `three3`, `two_up`, `two_up_inverted`
-
-### Landmark Extraction
-
-Instead of training on raw pixels, we train on coordinate data to reduce model complexity and improve robustness.
-
-- **Script:** `scripts/process_dataset.py`
-- **Action:**
-    - Loads raw images.
-    - Uses MediaPipe to detect hand landmarks.
-    - Translates landmarks to a relative coordinate system (origin at wrist).
-    - Normalizes coordinates.
-    - Saves the resulting vectors to `data/processed/landmarks.csv`.
-
-### Training & Conversion
-
-- **Script:** `scripts/train_model.py`
-- **Action:**
-    - Loads the CSV data.
-    - Fits a `StandardScaler` to the data (saved as `scaler_params.json`).
-    - Trains a Keras Sequential Neural Network with Dropout and BatchNormalization.
-    - Evaluates performance and generates a classification report.
-    - Converts the final Keras model to a quantized **TFLite** model for efficient real-time inference.
-
-## Requirements
-
-- Python 3.11.14
-- A working webcam
-- `uv` package manager (recommended) or `pip`
+```text
+gesture-recognizer/
+├── data/               # Raw images and processed CSVs (ignored by git)
+├── logs/               # Training history and TensorBoard logs
+├── models/             # TFLite models, labels, and scalers
+│   ├── gesture_classifier.tflite
+│   ├── labels.txt
+│   └── scaler_params.json
+├── scripts/            # Pipeline utility notebooks and tools
+│   ├── download_dataset.ipynb
+│   ├── process_dataset.ipynb
+│   ├── test_mediapipe.py   # MediaPipe verification tool
+│   ├── train_model.ipynb
+│   └── visualize_dataset.ipynb
+├── src/                # Application source code
+│   ├── actions.py          # Gesture-to-action mapping
+│   ├── camera_thread.py    # Async camera capture
+│   ├── config.py           # Constants and paths
+│   ├── gesture_handler.py  # Logic for triggering actions
+│   ├── inference.py        # TFLite inference wrapper
+│   ├── inference_thread.py # Async inference execution
+│   ├── main_window.py      # PySide6 GUI
+│   └── settings_manager.py # JSON settings persistence
+├── main.py             # Application entry point
+├── pyproject.toml      # Project configuration and dependencies
+└── uv.lock             # Dependency lockfile
+```
 
 ## Setup
+
+### Requirements
+
+- **Python:** 3.11.14 (strict versioning via `pyproject.toml`)
+- **Webcam:** A working camera for real-time recognition.
+- **Package Manager:** `uv` is recommended.
+
+### Installation
 
 1. **Clone the repository:**
    ```powershell
@@ -95,45 +95,44 @@ Instead of training on raw pixels, we train on coordinate data to reduce model c
    ```
 
 3. **Environment Variables:**
-   Create a `.env` file in the root directory if you need to download the dataset:
+   Create a `.env` file in the root directory for dataset acquisition:
    ```env
    HF_TOKEN=your_huggingface_token_here
    ```
 
 ## Usage
 
-### Running the Pipeline
+### Running the Application
 
-Follow the steps in the [Pipeline](#creating-a-model) section above using the following commands:
-
-```powershell
-uv run scripts/download_dataset.py
-uv run scripts/process_dataset.py
-uv run scripts/train_model.py
-```
-
-### Running Real-Time Recognition
-
-To start the application and test the trained model:
+To start the real-time recognition GUI:
 
 ```powershell
 uv run main.py
 ```
 
-- Press **ESC** to exit the application.
+- **Features:** Toggle gestures, adjust confidence, and see live landmark overlays.
+- **Exit:** Close the window or press **ESC** (if implemented in the GUI).
 
-## Project Structure
+### Creating a Custom Model
 
-```text
-gesture-recognizer/
-├── data/               # Raw images and processed CSVs
-├── logs/               # Training history and TensorBoard logs
-├── main.py             # Application entry point
-├── models/             # TFLite models, labels, and scalers
-├── pyproject.toml      # Dependencies
-├── scripts/            # Pipeline utility scripts
-└── uv.lock             # Dependency lockfile
-```
+The project uses a subset of the **HaGrid** dataset. The pipeline is documented in Jupyter notebooks within the
+`scripts/` folder:
+
+1. **Download Data:** `scripts/download_dataset.ipynb`
+    - Downloads images from Hugging Face.
+2. **Process Landmarks:** `scripts/process_dataset.ipynb`
+    - Extracts landmarks using MediaPipe and saves to `data/processed/landmarks.csv`.
+3. **Train Model:** `scripts/train_model.ipynb`
+    - Trains the Keras model, scales data, and exports to TFLite.
+4. **Visualize:** `scripts/visualize_dataset.ipynb`
+    - Explore the processed landmark distributions.
+
+> **Note:** To run notebooks with `uv`, use `uv run jupyter lab` or configure your IDE to use the `.venv` created by
+`uv`.
+
+## Scripts
+
+- `scripts/test_mediapipe.py`: A utility script to verify MediaPipe landmark extraction on your camera.
 
 ## License
 
