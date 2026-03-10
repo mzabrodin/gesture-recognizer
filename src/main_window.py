@@ -7,7 +7,7 @@ from functools import partial
 
 import numpy as np
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QFont, QIcon, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -114,6 +114,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(WINDOW_DEFAULTS.title)
         self.resize(WINDOW_DEFAULTS.width, WINDOW_DEFAULTS.height)
+        app_icon = QIcon(WINDOW_DEFAULTS.icon)
+        self.setWindowIcon(app_icon)
 
         central = QWidget()
         self.setCentralWidget(central)
