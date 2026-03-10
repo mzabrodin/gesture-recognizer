@@ -48,6 +48,7 @@ class WindowDefaults:
     title: str = "Gesture Recognizer"
     width: int = 900
     height: int = 640
+    icon: str = os.path.join(_PROJECT_ROOT, "assets", "icon.svg")
 
 
 HAND_CONNECTIONS: tuple[tuple[int, int], ...] = (
