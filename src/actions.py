@@ -115,19 +115,64 @@ def brightness_down() -> None:
         except Exception:
             log.exception("Failed to decrease brightness")
 
+ACTION_REGISTRY = {
+    "Volume Up": volume_up,
+    "Volume Down": volume_down,
+    "Toggle Mute": toggle_mute,
+    "Play/Pause": play_pause,
+    "Screenshot": take_screenshot,
+    "Brightness Up": brightness_up,
+    "Brightness Down": brightness_down,
+}
+
+DEFAULT_GESTURE_ACTIONS = {
+    "like": "Volume Up",
+    "dislike": "Volume Down",
+    "mute": "Toggle Mute",
+    "middle_finger": "Screenshot",
+    "peace": "Screenshot",
+    "fist": "Play/Pause",
+    "rock": "Toggle Mute",
+    "stop": "Brightness Up",
+    "palm": "Brightness Down",
+    "ok": "Play/Pause",
+    "call": "Play/Pause",
+}
+
+_DEFAULT_PARAMS: dict[str, dict] = {
+    "like": {"hold_time": 0.5, "cooldown": 0.5},
+    "dislike": {"hold_time": 0.5, "cooldown": 0.5},
+    "mute": {"hold_time": 0.8, "cooldown": 1.5},
+    "middle_finger": {"hold_time": 1.0, "cooldown": 2.0},
+    "peace": {"hold_time": 1.0, "cooldown": 2.0},
+    "fist": {"hold_time": 0.8, "cooldown": 1.0},
+    "rock": {"hold_time": 0.8, "cooldown": 1.5},
+    "stop": {"hold_time": 0.6, "cooldown": 0.6},
+    "palm": {"hold_time": 0.6, "cooldown": 0.6},
+    "ok": {"hold_time": 0.8, "cooldown": 1.5},
+    "call": {"hold_time": 0.8, "cooldown": 1.5},
+}
+
 
 def build_default_actions() -> list[GestureAction]:
     """Return the default set of gesture→action bindings."""
-    return [
-        GestureAction("like", hold_time=0.5, cooldown=0.5, callback=volume_up),
-        GestureAction("dislike", hold_time=0.5, cooldown=0.5, callback=volume_down),
-        GestureAction("mute", hold_time=0.8, cooldown=1.5, callback=toggle_mute),
-        GestureAction("middle_finger", hold_time=1.0, cooldown=2.0, callback=take_screenshot),
-        GestureAction("peace", hold_time=1.0, cooldown=2.0, callback=take_screenshot),
-        GestureAction("fist", hold_time=0.8, cooldown=1.0, callback=play_pause),
-        GestureAction("rock", hold_time=0.8, cooldown=1.5, callback=toggle_mute),
-        GestureAction("stop", hold_time=0.6, cooldown=0.6, callback=brightness_up),
-        GestureAction("palm", hold_time=0.6, cooldown=0.6, callback=brightness_down),
-        GestureAction("ok", hold_time=0.8, cooldown=1.5, callback=play_pause),
-        GestureAction("call", hold_time=0.8, cooldown=1.5, callback=play_pause),
-    ]
+    return build_actions(DEFAULT_GESTURE_ACTIONS)
+
+
+def build_actions(gesture_actions: dict[str, str]) -> list[GestureAction]:
+    """Build GestureAction list from a gesture→action_name mapping."""
+    result = []
+    for gesture, action_name in gesture_actions.items():
+        action = build_single_action(gesture, action_name)
+        if action is not None:
+            result.append(action)
+    return result
+
+
+def build_single_action(gesture: str, action_name: str) -> GestureAction | None:
+    """Build a single GestureAction for the given gesture and action name."""
+    callback = ACTION_REGISTRY.get(action_name)
+    if callback is None:
+        return None
+    params = _DEFAULT_PARAMS.get(gesture, {"hold_time": 0.8, "cooldown": 1.0})
+    return GestureAction(gesture, callback=callback, **params)

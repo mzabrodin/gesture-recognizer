@@ -266,3 +266,5 @@ pyrightconfig.json
 data/raw
 logs
 screenshots/
+.DS_Store
+ .claude/

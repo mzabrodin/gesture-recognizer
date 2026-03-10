@@ -10,19 +10,91 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QPushButton,
     QScrollArea,
     QSlider,
+    QSystemTrayIcon,
     QVBoxLayout,
     QWidget,
 )
 
+from src.actions import ACTION_REGISTRY, build_single_action
 from src.config import HAND_CONNECTIONS, WINDOW_DEFAULTS
 from src.gesture_handler import GestureActionHandler
 from src.settings_manager import SettingsManager
+
+
+class GestureActionsDialog(QDialog):
+    """Modal dialog for customizing gesture→action mappings."""
+
+    def __init__(
+        self,
+        settings_mgr: SettingsManager,
+        handler: GestureActionHandler,
+        parent=None,
+    ) -> None:
+        super().__init__(parent)
+        self._settings = settings_mgr
+        self._handler = handler
+        self._combos: dict[str, QComboBox] = {}
+
+        self.setWindowTitle("Customize Actions")
+        self.setMinimumWidth(420)
+
+        layout = QVBoxLayout(self)
+
+        header = QLabel("Assign an action to each gesture:")
+        header.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        layout.addWidget(header)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        inner = QWidget()
+        grid = QGridLayout(inner)
+        grid.setColumnStretch(1, 1)
+
+        action_names = list(ACTION_REGISTRY.keys())
+
+        for row_idx, (gesture, active) in enumerate(
+            sorted(self._settings.settings.active_gestures.items())
+        ):
+            label = QLabel(gesture)
+            label.setFont(QFont("Menlo", 12))
+            if not active:
+                label.setStyleSheet("color: #888;")
+            grid.addWidget(label, row_idx, 0)
+
+            combo = QComboBox()
+            combo.addItems(action_names)
+            current_action = self._settings.settings.gesture_actions.get(gesture, "")
+            combo.setCurrentText(current_action)
+            combo.currentTextChanged.connect(partial(self._on_action_changed, gesture))
+            grid.addWidget(combo, row_idx, 1)
+
+            self._combos[gesture] = combo
+
+        scroll.setWidget(inner)
+        layout.addWidget(scroll)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(self.accept)
+        layout.addWidget(buttons)
+
+    def _on_action_changed(self, gesture: str, action_name: str) -> None:
+        self._settings.settings.gesture_actions[gesture] = action_name
+        if self._settings.settings.active_gestures.get(gesture, False):
+            action = build_single_action(gesture, action_name)
+            if action:
+                self._handler.register(action)
+        self._settings.save()
 
 
 class MainWindow(QMainWindow):
@@ -113,8 +185,16 @@ class MainWindow(QMainWindow):
         g_outer.addWidget(gestures_scroll)
         panel.addWidget(gestures_group)
 
+        self._actions_btn = QPushButton("Customize actions…")
+        self._actions_btn.clicked.connect(self._open_actions_dialog)
+        panel.addWidget(self._actions_btn)
+
         panel.addStretch()
 
+
+    def _open_actions_dialog(self) -> None:
+        dialog = GestureActionsDialog(self._settings, self._handler, parent=self)
+        dialog.exec()
 
     def _on_confidence_changed(self, value: int) -> None:
         pct = value / 100.0
@@ -130,12 +210,10 @@ class MainWindow(QMainWindow):
     def _on_gesture_toggled(self, gesture: str, checked: bool) -> None:
         self._settings.settings.active_gestures[gesture] = checked
         if checked:
-            from src.actions import build_default_actions
-
-            for act in build_default_actions():
-                if act.gesture == gesture:
-                    self._handler.register(act)
-                    break
+            action_name = self._settings.settings.gesture_actions.get(gesture, "")
+            action = build_single_action(gesture, action_name)
+            if action:
+                self._handler.register(action)
         else:
             self._handler.unregister(gesture)
         self._settings.save()
@@ -197,7 +275,48 @@ class MainWindow(QMainWindow):
 
         self._fps_label.setText(f"FPS: {int(self._fps)}")
 
+    def set_tray(self, tray: QSystemTrayIcon) -> None:
+        """Store a reference to the tray icon so the window can hide instead of quit."""
+        self._tray = tray
+
     def closeEvent(self, event) -> None:
-        """Persist settings on window close."""
+        """Hide to tray instead of quitting (if tray is available)."""
         self._settings.save()
-        super().closeEvent(event)
+        if hasattr(self, "_tray") and self._tray.isVisible():
+            event.ignore()
+            self.hide()
+            _macos_set_dock_icon_visible(False)
+        else:
+            super().closeEvent(event)
+
+    def show(self) -> None:
+        _macos_set_dock_icon_visible(True)
+        super().show()
+
+
+def _macos_set_dock_icon_visible(visible: bool) -> None:
+    """Show or hide the Dock icon on macOS. No-op on other platforms."""
+    import sys
+    if sys.platform != "darwin":
+        return
+    try:
+        import ctypes
+        import ctypes.util
+
+        objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+        objc.objc_getClass.restype = ctypes.c_void_p
+        objc.sel_registerName.restype = ctypes.c_void_p
+        objc.objc_msgSend.restype = ctypes.c_void_p
+        objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+
+        NSApp = objc.objc_msgSend(
+            objc.objc_getClass(b"NSApplication"),
+            objc.sel_registerName(b"sharedApplication"),
+        )
+
+        # 0 = Regular (shows in Dock), 1 = Accessory (hides from Dock)
+        policy = 0 if visible else 1
+        objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long]
+        objc.objc_msgSend(NSApp, objc.sel_registerName(b"setActivationPolicy:"), policy)
+    except Exception:
+        pass

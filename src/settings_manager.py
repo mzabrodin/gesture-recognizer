@@ -34,6 +34,20 @@ class UserSettings:
             "call": True,
             "ok": True,
             "palm": True,
+        })
+    gesture_actions: dict[str, str] = field(
+        default_factory=lambda: {
+            "like": "Volume Up",
+            "dislike": "Volume Down",
+            "mute": "Toggle Mute",
+            "middle_finger": "Screenshot",
+            "peace": "Screenshot",
+            "fist": "Play/Pause",
+            "rock": "Toggle Mute",
+            "stop": "Brightness Up",
+            "palm": "Brightness Down",
+            "ok": "Play/Pause",
+            "call": "Play/Pause",
         }
     )
 
@@ -59,6 +73,7 @@ class SettingsManager:
                 hold_time=data.get("hold_time", defaults.hold_time),
                 cooldown=data.get("cooldown", defaults.cooldown),
                 active_gestures={**defaults.active_gestures, **data.get("active_gestures", {})},
+                gesture_actions={**defaults.gesture_actions, **data.get("gesture_actions", {})},
             )
         except (json.JSONDecodeError, TypeError, KeyError):
             return UserSettings()
