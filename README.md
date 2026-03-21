@@ -42,6 +42,7 @@ The system utilizes a multi-stage approach:
 
 ```text
 gesture-recognizer/
+├── assets/             # Icon
 ├── data/               # Raw images and processed CSVs (ignored by git)
 ├── logs/               # Training history and TensorBoard logs
 ├── models/             # TFLite models, labels, and scalers
@@ -63,8 +64,12 @@ gesture-recognizer/
 │   ├── inference_thread.py # Async inference execution
 │   ├── main_window.py      # PySide6 GUI
 │   └── settings_manager.py # JSON settings persistence
+├── .env.example        # Example environment variable file for dataset acquisition
+├── .gitignore          # Git ignore rules
+├── LICENSE.md          # MIT License
 ├── main.py             # Application entry point
 ├── pyproject.toml      # Project configuration and dependencies
+├── README.md           # Project documentation
 └── uv.lock             # Dependency lockfile
 ```
 
